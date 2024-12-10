@@ -1,29 +1,5 @@
 const http = require("http");
 
-const tasks = [
-  {
-    id: 1,
-    title: "Cambiar arena del gato",
-    isCompleted: false,
-    priority: "MEDIUM",
-    category: "HOME",
-  },
-  {
-    id: 2,
-    title: "Ir a comprar",
-    isCompleted: false,
-    priority: "HIGH",
-    category: "HOME",
-  },
-  {
-    id: 3,
-    title: "Preparar reunión Q2",
-    isCompleted: false,
-    priority: "LOW",
-    category: "WORK",
-  },
-];
-
 async function handleRequests(req, res) {
   const [, endpoint] = req.url.split("/");
   const method = req.method;
@@ -82,6 +58,37 @@ async function handleRequests(req, res) {
 
     res.writeHead(201);
     res.end(JSON.stringify(newTask));
+    return;
+  }
+
+  if (endpoint === "task" && method === "DELETE") {
+    let raw = "";
+    for await (const chunk of req) {
+      raw += chunk;
+    }
+
+    const object = JSON.parse(raw);
+    const id = object["id"];
+
+    if (!parseInt(id)) {
+      res.writeHead(400);
+      res.end("Request must include a numeric id");
+      return;
+    }
+
+    const index = tasks.findIndex((task) => task.id === id);
+
+    if (index === -1) {
+      res.writeHead(404);
+      res.end(`No task matches id ${id}`);
+      return;
+    }
+
+    tasks = tasks.filter((task) => task.id !== id);
+
+    res.writeHead(200);
+    res.end(JSON.stringify(tasks));
+
     return;
   }
 
