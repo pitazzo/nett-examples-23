@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "title": "Dar de comer a Coco 🐶",
+    "isCompleted": false,
+    "priority": "MEDIUM",
+    "category": "HOME"
+  },
+  {
+    "id": 3,
+    "title": "Preparar reunión Q2",
+    "isCompleted": false,
+    "priority": "LOW",
+    "category": "WORK"
+  },
+  {
+    "id": 3,
+    "title": "Dar de comer a Hércules 🐈",
+    "category": "HOME",
+    "priority": "HIGH",
+    "isCompleted": false
+  }
+]

@@ -1,16 +1,22 @@
 const http = require("http");
+const fs = require("node:fs/promises");
+
+const FILE_NAME = "tasks.json";
 
 async function handleRequests(req, res) {
   const [, endpoint] = req.url.split("/");
   const method = req.method;
 
   if (endpoint === "tasks" && method === "GET") {
+    const tasks = await readTasks();
+
     res.writeHead(200);
     res.end(JSON.stringify(tasks));
     return;
   }
 
   if (endpoint === "completed-tasks" && method === "GET") {
+    const tasks = await readTasks();
     res.writeHead(200);
     res.end(JSON.stringify(tasks.filter((task) => task.isCompleted)));
     return;
@@ -46,6 +52,8 @@ async function handleRequests(req, res) {
       return;
     }
 
+    const tasks = await readTasks();
+
     const newTask = {
       id: tasks.length + 1,
       title: title,
@@ -55,6 +63,8 @@ async function handleRequests(req, res) {
     };
 
     tasks.push(newTask);
+
+    await writeTasks(tasks);
 
     res.writeHead(201);
     res.end(JSON.stringify(newTask));
@@ -76,6 +86,8 @@ async function handleRequests(req, res) {
       return;
     }
 
+    let tasks = await readTasks();
+
     const index = tasks.findIndex((task) => task.id === id);
 
     if (index === -1) {
@@ -84,10 +96,12 @@ async function handleRequests(req, res) {
       return;
     }
 
-    tasks = tasks.filter((task) => task.id !== id);
+    const fileteredTasks = tasks.filter((task) => task.id !== id);
+
+    await writeTasks(fileteredTasks);
 
     res.writeHead(200);
-    res.end(JSON.stringify(tasks));
+    res.end(JSON.stringify(fileteredTasks));
 
     return;
   }
@@ -96,6 +110,14 @@ async function handleRequests(req, res) {
   res.end(
     `Operation ${endpoint} with method ${method} is not supported by the server`
   );
+}
+
+async function readTasks() {
+  return fs.readFile(FILE_NAME, "utf8").then((raw) => JSON.parse(raw));
+}
+
+async function writeTasks(tasks) {
+  await fs.writeFile(FILE_NAME, JSON.stringify(tasks), "utf8");
 }
 
 async function checkApiKeyMiddleware(req, res, next) {
