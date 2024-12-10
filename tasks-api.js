@@ -106,6 +106,47 @@ async function handleRequests(req, res) {
     return;
   }
 
+  if (endpoint === "complete-task" && method === "PATCH") {
+    let raw = "";
+    for await (const chunk of req) {
+      raw += chunk;
+    }
+
+    const object = JSON.parse(raw);
+    const id = object["id"];
+
+    if (!parseInt(id)) {
+      res.writeHead(400);
+      res.end("Request must include a numeric id");
+      return;
+    }
+
+    let tasks = await readTasks();
+
+    const index = tasks.findIndex((task) => task.id === id);
+
+    if (index === -1) {
+      res.writeHead(404);
+      res.end(`No task matches id ${id}`);
+      return;
+    }
+
+    if (tasks[index].isCompleted) {
+      res.writeHead(400);
+      res.end("Task is already completed");
+      return;
+    }
+
+    tasks[index].isCompleted = true;
+
+    await writeTasks(tasks);
+
+    res.writeHead(200);
+    res.end(JSON.stringify(tasks[index]));
+
+    return;
+  }
+
   res.writeHead(404);
   res.end(
     `Operation ${endpoint} with method ${method} is not supported by the server`
