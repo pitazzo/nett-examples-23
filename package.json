@@ -1,0 +1,15 @@
+{
+  "name": "live_23",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tasks-api.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "uuid": "^11.0.3"
+  }
+}

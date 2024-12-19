@@ -1,7 +1,11 @@
 const http = require("http");
 const fs = require("node:fs/promises");
+const { v4: uuidv4 } = require("uuid");
 
 const FILE_NAME = "tasks.json";
+const UUID_REGEX = RegExp(
+  "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$"
+);
 
 async function handleRequests(req, res) {
   const [, endpoint] = req.url.split("/");
@@ -9,7 +13,6 @@ async function handleRequests(req, res) {
 
   if (endpoint === "tasks" && method === "GET") {
     const tasks = await readTasks();
-
     res.writeHead(200);
     res.end(JSON.stringify(tasks));
     return;
@@ -55,7 +58,7 @@ async function handleRequests(req, res) {
     const tasks = await readTasks();
 
     const newTask = {
-      id: tasks.length + 1,
+      id: uuidv4(),
       title: title,
       category: category,
       priority: priority,
@@ -80,9 +83,9 @@ async function handleRequests(req, res) {
     const object = JSON.parse(raw);
     const id = object["id"];
 
-    if (!parseInt(id)) {
+    if (!UUID_REGEX.test(id)) {
       res.writeHead(400);
-      res.end("Request must include a numeric id");
+      res.end("Request must include a valid uuid");
       return;
     }
 
@@ -115,9 +118,9 @@ async function handleRequests(req, res) {
     const object = JSON.parse(raw);
     const id = object["id"];
 
-    if (!parseInt(id)) {
+    if (!UUID_REGEX.test(id)) {
       res.writeHead(400);
-      res.end("Request must include a numeric id");
+      res.end("Request must include a valid uuid");
       return;
     }
 
