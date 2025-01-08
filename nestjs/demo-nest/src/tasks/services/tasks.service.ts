@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateTaskDto } from 'src/tasks/dtos/create-task.dto';
 import { TaskDto } from 'src/tasks/dtos/task.dto';
 import { UpdateTaskDto } from 'src/tasks/dtos/update-task.dto';
@@ -78,6 +82,24 @@ export class TasksService {
     if (dto.title) {
       this.tasks[index].title = dto.title;
     }
+
+    return this.tasks[index];
+  }
+
+  complete(uuid: string): TaskDto {
+    const index = this.tasks.findIndex((task) => task.id === uuid);
+
+    if (index === -1) {
+      throw new NotFoundException(`Task with id ${uuid} not found`);
+    }
+
+    if (this.tasks[index].isCompleted) {
+      throw new BadRequestException(
+        `Task with id ${uuid} is already completed`,
+      );
+    }
+
+    this.tasks[index].isCompleted = true;
 
     return this.tasks[index];
   }

@@ -49,4 +49,9 @@ export class TasksController {
   ): TaskDto {
     return this.tasksServices.updateTask(uuid, dto);
   }
+
+  @Patch(':id/complete')
+  complete(@Param('id', ParseUUIDPipe) uuid: string): TaskDto {
+    return this.tasksServices.complete(uuid);
+  }
 }
