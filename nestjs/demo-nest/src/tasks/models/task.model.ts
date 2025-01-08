@@ -1,9 +1,9 @@
 export class Task {
   constructor(
     readonly id: string,
-    readonly title: string,
-    readonly isCompleted: boolean,
-    readonly category: 'HOME' | 'WORK' | 'FAMILY',
-    readonly priority: 'LOW' | 'MEDIUM' | 'HIGH',
+    public title: string,
+    public isCompleted: boolean,
+    public category: 'HOME' | 'WORK' | 'FAMILY',
+    public priority: 'LOW' | 'MEDIUM' | 'HIGH',
   ) {}
 }
