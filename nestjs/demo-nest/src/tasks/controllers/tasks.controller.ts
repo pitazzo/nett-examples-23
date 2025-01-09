@@ -2,11 +2,14 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
+  Req,
+  Request,
 } from '@nestjs/common';
 import { CreateTaskDto } from 'src/tasks/dtos/create-task.dto';
 import { TaskDto } from 'src/tasks/dtos/task.dto';
@@ -18,40 +21,80 @@ export class TasksController {
   constructor(private tasksServices: TasksService) {}
 
   @Get()
-  getAllTasks(): TaskDto[] {
+  getAllTasks(@Req() req: Request): TaskDto[] {
+    if (req.headers['authorization'] !== process.env.API_KEY) {
+      throw new ForbiddenException(
+        'Please provide a valid API KEY in header authorization',
+      );
+    }
+
     return this.tasksServices.fetchAllTasks();
   }
 
   @Get('pending')
-  getPendingTasks(): TaskDto[] {
+  getPendingTasks(@Req() req: Request): TaskDto[] {
+    if (req.headers['authorization'] !== process.env.API_KEY) {
+      throw new ForbiddenException(
+        'Please provide a valid API KEY in header authorization',
+      );
+    }
     return this.tasksServices.fetchPendingTasks();
   }
 
   @Get('completed')
-  getCompletedTasks(): TaskDto[] {
+  getCompletedTasks(@Req() req: Request): TaskDto[] {
+    if (req.headers['authorization'] !== process.env.API_KEY) {
+      throw new ForbiddenException(
+        'Please provide a valid API KEY in header authorization',
+      );
+    }
     return this.tasksServices.fetchCompletedTasks();
   }
 
   @Post()
-  createTask(@Body() createTaskDto: CreateTaskDto) {
+  createTask(@Req() req: Request, @Body() createTaskDto: CreateTaskDto) {
+    if (req.headers['authorization'] !== process.env.API_KEY) {
+      throw new ForbiddenException(
+        'Please provide a valid API KEY in header authorization',
+      );
+    }
     return this.tasksServices.createTask(createTaskDto);
   }
 
   @Delete(':id')
-  deleteTask(@Param('id', ParseUUIDPipe) id: string) {
+  deleteTask(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string) {
+    if (req.headers['authorization'] !== process.env.API_KEY) {
+      throw new ForbiddenException(
+        'Please provide a valid API KEY in header authorization',
+      );
+    }
     return this.tasksServices.deleteTask(id);
   }
 
   @Patch(':id')
   updateTask(
+    @Req() req: Request,
     @Param('id', ParseUUIDPipe) uuid: string,
     @Body() dto: UpdateTaskDto,
   ): TaskDto {
+    if (req.headers['authorization'] !== process.env.API_KEY) {
+      throw new ForbiddenException(
+        'Please provide a valid API KEY in header authorization',
+      );
+    }
     return this.tasksServices.updateTask(uuid, dto);
   }
 
   @Patch(':id/complete')
-  complete(@Param('id', ParseUUIDPipe) uuid: string): TaskDto {
+  complete(
+    @Req() req: Request,
+    @Param('id', ParseUUIDPipe) uuid: string,
+  ): TaskDto {
+    if (req.headers['authorization'] !== process.env.API_KEY) {
+      throw new ForbiddenException(
+        'Please provide a valid API KEY in header authorization',
+      );
+    }
     return this.tasksServices.complete(uuid);
   }
 }
