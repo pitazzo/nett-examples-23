@@ -8,17 +8,22 @@ import { TaskDto } from 'src/tasks/dtos/task.dto';
 import { UpdateTaskDto } from 'src/tasks/dtos/update-task.dto';
 import { Task } from 'src/tasks/models/task.model';
 import { SummaryService } from 'src/tasks/services/summary.service';
+import { TranslationService } from 'src/tasks/services/translation.service';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class TasksService {
-  constructor(private readonly summaryService: SummaryService) {}
+  constructor(
+    private readonly summaryService: SummaryService,
+    private readonly translationService: TranslationService,
+  ) {}
 
   tasks: Task[] = [
     {
       id: 'dfac6638-0551-420f-90c1-cda4eb9c01b1',
       title: 'Limpiar arena gato',
       summary: '...',
+      translation: '...',
       isCompleted: true,
       priority: 'HIGH',
       category: 'FAMILY',
@@ -27,6 +32,7 @@ export class TasksService {
       id: '32598e7f-9f32-4c91-8f88-057906e9b854',
       title: 'Sacar pasear al perro',
       summary: '...',
+      translation: '...',
       isCompleted: false,
       priority: 'HIGH',
       category: 'FAMILY',
@@ -46,10 +52,13 @@ export class TasksService {
   }
 
   async createTask(createTaskDto: CreateTaskDto): Promise<TaskDto> {
+    const summary = await this.summaryService.summarize(createTaskDto.title);
+
     const task = new Task(
       uuidv4(),
       createTaskDto.title,
-      await this.summaryService.summarize(createTaskDto.title),
+      summary,
+      await this.translationService.translate(summary),
       false,
       createTaskDto.category,
       createTaskDto.priority,
