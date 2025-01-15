@@ -21,7 +21,7 @@ export class TasksController {
   constructor(private tasksServices: TasksService) {}
 
   @Get()
-  getAllTasks(@Req() req: Request): TaskDto[] {
+  async getAllTasks(@Req() req: Request): Promise<TaskDto[]> {
     if (req.headers['authorization'] !== process.env.API_KEY) {
       throw new ForbiddenException(
         'Please provide a valid API KEY in header authorization',
@@ -32,7 +32,7 @@ export class TasksController {
   }
 
   @Get('pending')
-  getPendingTasks(@Req() req: Request): TaskDto[] {
+  getPendingTasks(@Req() req: Request): Promise<TaskDto[]> {
     if (req.headers['authorization'] !== process.env.API_KEY) {
       throw new ForbiddenException(
         'Please provide a valid API KEY in header authorization',
@@ -42,7 +42,7 @@ export class TasksController {
   }
 
   @Get('completed')
-  getCompletedTasks(@Req() req: Request): TaskDto[] {
+  getCompletedTasks(@Req() req: Request): Promise<TaskDto[]> {
     if (req.headers['authorization'] !== process.env.API_KEY) {
       throw new ForbiddenException(
         'Please provide a valid API KEY in header authorization',
@@ -76,7 +76,7 @@ export class TasksController {
     @Req() req: Request,
     @Param('id', ParseUUIDPipe) uuid: string,
     @Body() dto: UpdateTaskDto,
-  ): TaskDto {
+  ): Promise<TaskDto> {
     if (req.headers['authorization'] !== process.env.API_KEY) {
       throw new ForbiddenException(
         'Please provide a valid API KEY in header authorization',
@@ -89,7 +89,7 @@ export class TasksController {
   complete(
     @Req() req: Request,
     @Param('id', ParseUUIDPipe) uuid: string,
-  ): TaskDto {
+  ): Promise<TaskDto> {
     if (req.headers['authorization'] !== process.env.API_KEY) {
       throw new ForbiddenException(
         'Please provide a valid API KEY in header authorization',

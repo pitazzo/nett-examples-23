@@ -7,6 +7,7 @@ import { CreateTaskDto } from 'src/tasks/dtos/create-task.dto';
 import { TaskDto } from 'src/tasks/dtos/task.dto';
 import { UpdateTaskDto } from 'src/tasks/dtos/update-task.dto';
 import { Task } from 'src/tasks/models/task.model';
+import { PersistenceService } from 'src/tasks/services/persistence.service';
 import { SummaryService } from 'src/tasks/services/summary.service';
 import { TranslationService } from 'src/tasks/services/translation.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -16,106 +17,79 @@ export class TasksService {
   constructor(
     private readonly summaryService: SummaryService,
     private readonly translationService: TranslationService,
+    private readonly persistenceService: PersistenceService,
   ) {}
 
-  tasks: Task[] = [
-    {
-      id: 'dfac6638-0551-420f-90c1-cda4eb9c01b1',
-      title: 'Limpiar arena gato',
-      summary: '...',
-      translation: '...',
-      isCompleted: true,
-      priority: 'HIGH',
-      category: 'FAMILY',
-    },
-    {
-      id: '32598e7f-9f32-4c91-8f88-057906e9b854',
-      title: 'Sacar pasear al perro',
-      summary: '...',
-      translation: '...',
-      isCompleted: false,
-      priority: 'HIGH',
-      category: 'FAMILY',
-    },
-  ];
-
-  fetchAllTasks(): TaskDto[] {
-    return this.tasks;
+  async fetchAllTasks(): Promise<TaskDto[]> {
+    return this.persistenceService.fetchAllTasks();
   }
 
-  fetchCompletedTasks(): TaskDto[] {
-    return this.tasks.filter((task) => task.isCompleted);
+  fetchCompletedTasks(): Promise<TaskDto[]> {
+    return this.persistenceService.filterTasksByCompletness(true);
   }
 
-  fetchPendingTasks(): TaskDto[] {
-    return this.tasks.filter((task) => !task.isCompleted);
+  fetchPendingTasks(): Promise<TaskDto[]> {
+    return this.persistenceService.filterTasksByCompletness(false);
   }
 
   async createTask(createTaskDto: CreateTaskDto): Promise<TaskDto> {
     const summary = await this.summaryService.summarize(createTaskDto.title);
+    const translation = await this.translationService.translate(summary);
 
     const task = new Task(
       uuidv4(),
       createTaskDto.title,
       summary,
-      await this.translationService.translate(summary),
+      translation,
       false,
       createTaskDto.category,
       createTaskDto.priority,
     );
 
-    this.tasks.push(task);
-
-    return task;
+    return this.persistenceService.save(task);
   }
 
   deleteTask(id: string): void {
-    const index = this.tasks.findIndex((task) => task.id === id);
-
-    if (index === -1) {
-      throw new NotFoundException(`Task with id ${id} not found`);
-    }
-
-    this.tasks = this.tasks.filter((task) => task.id !== id);
+    console.log(`haciendo como que borro la tarea ${id}...`);
   }
 
-  updateTask(uuid: string, dto: UpdateTaskDto): TaskDto {
-    const index = this.tasks.findIndex((task) => task.id === uuid);
+  async updateTask(uuid: string, dto: UpdateTaskDto): Promise<TaskDto> {
+    const task = await this.persistenceService.findTaskById(uuid);
 
-    if (index === -1) {
-      throw new NotFoundException(`Task with id ${uuid} not found`);
+    if (!task) {
+      throw new NotFoundException(`Task with id ${uuid} was not found`);
     }
 
     if (dto.category) {
-      this.tasks[index].category = dto.category;
+      task.category = dto.category;
     }
 
     if (dto.priority) {
-      this.tasks[index].priority = dto.priority;
+      task.priority = dto.priority;
     }
 
     if (dto.title) {
-      this.tasks[index].title = dto.title;
+      task.title = dto.title;
     }
 
-    return this.tasks[index];
+    return this.persistenceService.save(task);
   }
 
-  complete(uuid: string): TaskDto {
-    const index = this.tasks.findIndex((task) => task.id === uuid);
+  async complete(uuid: string): Promise<TaskDto> {
+    const task = await this.persistenceService.findTaskById(uuid);
 
-    if (index === -1) {
-      throw new NotFoundException(`Task with id ${uuid} not found`);
+    if (!task) {
+      throw new NotFoundException(`Task with id ${uuid} was not found`);
     }
 
-    if (this.tasks[index].isCompleted) {
+    if (task.isCompleted) {
       throw new BadRequestException(
         `Task with id ${uuid} is already completed`,
       );
     }
 
-    this.tasks[index].isCompleted = true;
+    task.isCompleted = true;
 
-    return this.tasks[index];
+    return this.persistenceService.save(task);
   }
 }
