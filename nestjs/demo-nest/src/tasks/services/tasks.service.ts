@@ -3,58 +3,54 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTaskDto } from 'src/tasks/dtos/create-task.dto';
 import { TaskDto } from 'src/tasks/dtos/task.dto';
 import { UpdateTaskDto } from 'src/tasks/dtos/update-task.dto';
 import { Task } from 'src/tasks/models/task.model';
-import { PersistenceService } from 'src/tasks/services/persistence.service';
 import { SummaryService } from 'src/tasks/services/summary.service';
 import { TranslationService } from 'src/tasks/services/translation.service';
-import { v4 as uuidv4 } from 'uuid';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class TasksService {
   constructor(
     private readonly summaryService: SummaryService,
     private readonly translationService: TranslationService,
-    private readonly persistenceService: PersistenceService,
+    @InjectRepository(Task) private readonly taskRepository: Repository<Task>,
   ) {}
 
   async fetchAllTasks(): Promise<TaskDto[]> {
-    return this.persistenceService.fetchAllTasks();
+    return this.taskRepository.find();
   }
 
   fetchCompletedTasks(): Promise<TaskDto[]> {
-    return this.persistenceService.filterTasksByCompletness(true);
+    return this.taskRepository.find({ where: { isCompleted: true } });
   }
 
   fetchPendingTasks(): Promise<TaskDto[]> {
-    return this.persistenceService.filterTasksByCompletness(false);
+    return this.taskRepository.find({ where: { isCompleted: false } });
   }
 
   async createTask(createTaskDto: CreateTaskDto): Promise<TaskDto> {
     const summary = await this.summaryService.summarize(createTaskDto.title);
     const translation = await this.translationService.translate(summary);
 
-    const task = new Task(
-      uuidv4(),
-      createTaskDto.title,
-      summary,
-      translation,
-      false,
-      createTaskDto.category,
-      createTaskDto.priority,
-    );
-
-    return this.persistenceService.save(task);
+    return this.taskRepository.save({
+      title: createTaskDto.title,
+      summary: summary,
+      translation: translation,
+      category: createTaskDto.category,
+      priority: createTaskDto.priority,
+    });
   }
 
-  deleteTask(id: string): void {
-    console.log(`haciendo como que borro la tarea ${id}...`);
+  async deleteTask(id: string): Promise<void> {
+    await this.taskRepository.delete({ id: id });
   }
 
   async updateTask(uuid: string, dto: UpdateTaskDto): Promise<TaskDto> {
-    const task = await this.persistenceService.findTaskById(uuid);
+    const task = await this.taskRepository.findOneBy({ id: uuid });
 
     if (!task) {
       throw new NotFoundException(`Task with id ${uuid} was not found`);
@@ -72,11 +68,11 @@ export class TasksService {
       task.title = dto.title;
     }
 
-    return this.persistenceService.save(task);
+    return this.taskRepository.save(task);
   }
 
   async complete(uuid: string): Promise<TaskDto> {
-    const task = await this.persistenceService.findTaskById(uuid);
+    const task = await this.taskRepository.findOneBy({ id: uuid });
 
     if (!task) {
       throw new NotFoundException(`Task with id ${uuid} was not found`);
@@ -90,6 +86,6 @@ export class TasksService {
 
     task.isCompleted = true;
 
-    return this.persistenceService.save(task);
+    return this.taskRepository.save(task);
   }
 }

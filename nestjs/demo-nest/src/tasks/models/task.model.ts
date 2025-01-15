@@ -1,11 +1,25 @@
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity()
 export class Task {
-  constructor(
-    readonly id: string,
-    public title: string,
-    public summary: string,
-    public translation: string,
-    public isCompleted: boolean,
-    public category: 'HOME' | 'WORK' | 'FAMILY',
-    public priority: 'LOW' | 'MEDIUM' | 'HIGH',
-  ) {}
+  @PrimaryGeneratedColumn()
+  readonly id: string;
+
+  @Column()
+  title: string;
+
+  @Column()
+  summary: string;
+
+  @Column()
+  translation: string;
+
+  @Column({ default: false })
+  isCompleted: boolean;
+
+  @Column()
+  category: 'HOME' | 'WORK' | 'FAMILY';
+
+  @Column()
+  priority: 'LOW' | 'MEDIUM' | 'HIGH';
 }
